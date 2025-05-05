@@ -2,7 +2,7 @@ import os, uuid
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 from dotenv import load_dotenv 
-from utils.datsetup import *
+from utils import *
 
 load_dotenv()
 
