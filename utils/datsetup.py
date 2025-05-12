@@ -9,6 +9,7 @@ import json
 
 load_dotenv()
 
+
 # Replace these variables with your actual database credentials
 username = os.environ.get('USERNAME_AZURE')
 password = os.environ.get('PASSWORD')
