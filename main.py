@@ -1,9 +1,8 @@
 import os, uuid
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
-from dotenv import load_dotenv
-from pandas import *
-from utils import *
+from dotenv import load_dotenv 
+from utils.datsetup import *
 
 load_dotenv()
 
@@ -211,18 +210,21 @@ def create_dimension_tables(final_df, ev_df):
         'YEAR': [2022, 2023],
         'IS_CURRENT_YEAR': [False, True]
     })
+    time_dim.to_csv('extracted/time_dim.csv')
     
     # Suburb dimension
     suburb_dim = pd.DataFrame({
         'SUBURB_KEY': range(1, len(final_df) + 1),
         'SUBURB_NAME': final_df['SUBURB'],
     })
+    suburb_dim.to_csv('extracted/suburb_dim.csv')
     
     # Vehicle type dimension
     vehicle_type_dim = pd.DataFrame({
         'VEHICLE_TYPE_KEY': range(1, len(ev_df['VEHICLE_TYPE'].unique()) + 1),
         'VEHICLE_TYPE': sorted(ev_df['VEHICLE_TYPE'].unique())
     })
+    vehicle_type_dim.to_csv('extracted/vehicle_dim.csv')
     
     # Fuel type dimension
     fuel_type_dim = pd.DataFrame({
@@ -230,6 +232,7 @@ def create_dimension_tables(final_df, ev_df):
         'FUEL_TYPE': ['BEV', 'PHEV'],
         'FUEL_DESCRIPTION': ['Battery Electric Vehicle', 'Plug-in Hybrid Electric Vehicle']
     })
+    fuel_type_dim.to_csv('extracted/fuel_dim.csv')
     
     return time_dim, suburb_dim, vehicle_type_dim, fuel_type_dim
 
@@ -287,8 +290,31 @@ def create_fact_tables(final_df, suburb_dim):
     # Combine 2022 and 2023 data
     energy_pollution_fact = pd.concat([energy_pollution_fact, energy_pollution_fact_2022])
     
+    ev_impact_fact.to_csv('ev_fact.csv')
+    energy_pollution_fact.to_csv('energy_fact.csv')
+
+    
     return ev_impact_fact, energy_pollution_fact
-   
+
+def load_to_azure(azureDB, time_dim, suburb_dim, vehicle_type_dim, fuel_type_dim, ev_impact_fact, energy_pollution_fact):
+    """Load dimension and fact tables to Azure"""
+    print("\n=== LOADING DATA TO AZURE ===")
+    
+    # Load dimension tables
+    print("\nLoading dimension tables to Azure SQL database...")
+    azureDB.upload_dataframe_sqldatabase("dim_time", time_dim)
+    azureDB.upload_dataframe_sqldatabase("dim_suburb", suburb_dim)
+    azureDB.upload_dataframe_sqldatabase("dim_vehicle_type", vehicle_type_dim)
+    azureDB.upload_dataframe_sqldatabase("dim_fuel_type", fuel_type_dim)
+    
+    # Load fact tables
+    print("\nLoading fact tables to Azure SQL database...")
+    azureDB.upload_dataframe_sqldatabase("fact_ev_impact", ev_impact_fact)
+    azureDB.upload_dataframe_sqldatabase("fact_energy_pollution", energy_pollution_fact)
+    
+    # Save to blob storage as well for backup/archival
+    print("\nSaving data to Azure Blob Storage for archival...")
+
 
 def main():
     print("Extracting Data")
@@ -353,6 +379,10 @@ def main():
     print("Energy vs Pollution Fact")
     print("Shape:", energy_pollution_fact.shape)
     print(energy_pollution_fact.head(), "\n")
+
+    # … after create_dimension_tables and create_fact_tables …
+    load_to_azure(azureDB, time_dim, suburb_dim, vehicle_type_dim, fuel_type_dim, 
+                 ev_impact_fact, energy_pollution_fact)
 
 if __name__ == "__main__":
     main()
