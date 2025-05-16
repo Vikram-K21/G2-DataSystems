@@ -1,4 +1,5 @@
 import streamlit as st
+import altair as alt
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -310,6 +311,26 @@ def main():
                 'NO2_LEVEL', 'NO2_CHANGE_PCT'
             ])
         
+                # Description of the combined data
+        st.markdown("""
+        <div style='margin-bottom: 20px;'>
+            <p><strong>Data Overview:</strong></p>
+            <p>This analysis merges electric vehicle (EV) adoption data with environmental and energy consumption data for each suburb. 
+            The resulting dataset includes key metrics such as:</p>
+            <ul>
+                <li><strong>Total EVs</strong>: Number of electric vehicles registered in each suburb.</li>
+                <li><strong>Average EV Range</strong>: The average driving range (in km) of EVs in each suburb.</li>
+                <li><strong>Average EV Price</strong>: The average cost of EVs in the area.</li>
+                <li><strong>Energy Consumption</strong>: Estimated household energy consumption (kWh) in 2023.</li>
+                <li><strong>NO₂ Level</strong>: Measured nitrogen dioxide levels in 2023.</li>
+                <li><strong>NO₂ Change (%)</strong>: Percent change in NO₂ levels compared to the previous year.</li>
+                <li><strong>EV Adoption Score</strong>: A composite score indicating the overall adoption rate of EVs in each suburb.</li>
+            </ul>
+            <p>This merged data enables side-by-side comparison of EV trends and environmental impacts across suburbs.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        
         # Calculate EV adoption score and normalize it if we have data
         if not combined_data.empty and 'EV_ADOPTION_SCORE' in combined_data.columns:
             # Check if we have more than one value and they're not all the same
@@ -444,7 +465,7 @@ def main():
             fig.update_traces(textposition="top center")
             fig.update_layout(height=600)
             st.plotly_chart(fig, use_container_width=True)
-    
+
     with tab4:
         st.markdown('<p class="sub-header">Data Explorer</p>', unsafe_allow_html=True)
         
