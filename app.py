@@ -73,15 +73,34 @@ def join_tables(data):
     
     return ev_impact_with_suburb, energy_pollution_with_suburb
 
+
+
+        # !!! #
+### MAIN PAGE CODE BELOW ###
+        # !!! #
+
+
 # Main function
 def main():
-    st.markdown('<p class="main-header">EV Impact & Environmental Analysis Dashboard</p>', unsafe_allow_html=True)
+    # Top page
+
+    st.title(":blue[EcoWatt]")
+
+    # st.header("In Sydney, ever since the introduction of electric vehicles (EVs), have they made any impact on the reducing the amount of pollution yearly?")
+    st.markdown("<h1 style='text-align: center;padding-top:240px;'>In Sydney, ever since the introduction of electric vehicles (EVs), have they made any impact on the reducing the amount of pollution yearly?</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>The answer is yes, but not as much as we would like to see.</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;padding-bottom:340px;'>Below, shows some stats based off recent data from Sydney Power and Car registration data.</p>", unsafe_allow_html=True)
+    # st.markdown('<p class="main-header">EV Impact & Environmental Analysis Dashboard</p>', unsafe_allow_html=True)
     
     st.write("""
     This dashboard analyzes the relationship between electric vehicle adoption, 
     electricity consumption, and pollution levels across different suburbs.
     """)
-    
+
+    ###################
+    # !!- LOAD DATA -!! 
+    ###################
+
     # Load data
     data = load_data()
     
@@ -91,7 +110,11 @@ def main():
     
     # Join tables
     ev_impact_with_suburb, energy_pollution_with_suburb = join_tables(data)
-    
+
+    ###################
+    # !!- SHOW DATA -!! 
+    ###################
+
     # Dashboard tabs
     tab1, tab2, tab3, tab4 = st.tabs([
         "EV Adoption Overview", 
@@ -99,8 +122,11 @@ def main():
         "Suburb Analysis",
         "Data Explorer"
     ])
+
+    # TAB 1: EV Adoption Overview
     
     with tab1:
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">EV Adoption Metrics</p>', unsafe_allow_html=True)
         
         # Create metrics row
@@ -129,7 +155,7 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
         
         # EV Distribution by Suburb
-        st.subheader("EV Distribution by Suburb")
+        st.subheader("Battery EVs(BEV) and Plug-in Hybrid EVs(PHEV) Distribution by Suburb", divider="gray")
         
         # Sort for better visualization
         ev_by_suburb = ev_impact_with_suburb.sort_values(by="TOTAL_EVS", ascending=False)
@@ -138,7 +164,6 @@ def main():
             ev_by_suburb,
             x="SUBURB_NAME",
             y=["BEV_COUNT", "PHEV_COUNT"],
-            title="EV Distribution Across Suburbs",
             labels={"value": "Number of Vehicles", "SUBURB_NAME": "Suburb", "variable": "EV Type"},
             color_discrete_map={"BEV_COUNT": "#2196F3", "PHEV_COUNT": "#4CAF50"},
             barmode="stack"
@@ -147,7 +172,7 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
         
         # EV Price and Range Analysis
-        st.subheader("EV Price and Range Analysis")
+        st.subheader("EV Price and Range Analysis", divider="gray")
         
         col1, col2 = st.columns(2)
         
@@ -177,7 +202,10 @@ def main():
             )
             st.plotly_chart(fig, use_container_width=True)
     
+    # TAB 2: Environmental Impact Analysis
+
     with tab2:
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">Environmental Impact Analysis</p>', unsafe_allow_html=True)
         
         # Filter for 2023 data for current analysis
@@ -245,7 +273,10 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
 
     
+    # TAB 3: Suburb Comparison
+
     with tab3:
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">Suburb Comparison</p>', unsafe_allow_html=True)
         
         # Join EV impact and energy pollution for combined analysis
@@ -411,7 +442,10 @@ def main():
             fig.update_layout(height=600)
             st.plotly_chart(fig, use_container_width=True)
     
+    # TAB 4: Data Explorer
+    
     with tab4:
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">Data Explorer</p>', unsafe_allow_html=True)
         
         # Display raw data tables
