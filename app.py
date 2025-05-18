@@ -33,17 +33,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Function to load data from CSV files
+# Function to load data from CSV files - please do NOT change names of CSVs because it may cause confusion
 @st.cache_data
 def load_data():
     try:
         data = {}
-        data["dim_time"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\time_dim.csv')
-        data["dim_suburb"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\suburb_dim.csv')
-        data["dim_vehicle_type"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\vehicle_type_dim.csv')
-        data["dim_fuel_type"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\fuel_type_dim.csv')
-        data["fact_ev_impact"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\ev_impact_fact.csv')
-        data["fact_energy_pollution"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\energy_pollution_fact.csv')
+        data["dim_time"] = pd.read_csv(r'extracted\time_dim.csv')
+        data["dim_suburb"] = pd.read_csv(r'extracted\suburb_dim.csv')
+        data["dim_vehicle_type"] = pd.read_csv(r'extracted\vehicle_dim.csv')
+        data["dim_fuel_type"] = pd.read_csv(r'extracted\fuel_dim.csv')
+        data["fact_ev_impact"] = pd.read_csv(r'extracted\ev_fact.csv')
+        data["fact_energy_pollution"] = pd.read_csv(r'extracted\energy_fact.csv')
         return data
     except Exception as e:
         st.error(f"Error loading data: {e}")
