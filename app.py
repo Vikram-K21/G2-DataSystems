@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 # Page configuration
 st.set_page_config(
@@ -35,23 +36,19 @@ st.markdown("""
 # Function to load data from CSV files
 @st.cache_data
 def load_data():
-    """Load data from local CSV files"""
     try:
         data = {}
-        # Load dimension tables
-        data["dim_time"] = pd.read_csv('extracted/time_dim.csv')
-        data["dim_suburb"] = pd.read_csv('extracted/suburb_dim.csv')
-        data["dim_vehicle_type"] = pd.read_csv('extracted/vehicle_dim.csv')
-        data["dim_fuel_type"] = pd.read_csv('extracted/fuel_dim.csv')
-        
-        # Load fact tables
-        data["fact_ev_impact"] = pd.read_csv('ev_fact.csv')
-        data["fact_energy_pollution"] = pd.read_csv('energy_fact.csv')
-        
+        data["dim_time"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\time_dim.csv')
+        data["dim_suburb"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\suburb_dim.csv')
+        data["dim_vehicle_type"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\vehicle_type_dim.csv')
+        data["dim_fuel_type"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\fuel_type_dim.csv')
+        data["fact_ev_impact"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\ev_impact_fact.csv')
+        data["fact_energy_pollution"] = pd.read_csv(r'C:\Users\HP\Documents\G2-DataSystems\energy_pollution_fact.csv')
         return data
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return None
+
 
 # Function to join dimension and fact tables
 def join_tables(data):
@@ -201,83 +198,52 @@ def main():
                 "ENERGY_CONSUMPTION": "Energy Consumption (kWh)",
                 "NO2_LEVEL": "NO2 Levels (μg/m³)"
             },
-            text="SUBURB_NAME"
+            
         )
         fig.update_traces(textposition="top center")
         fig.update_layout(height=600)
         st.plotly_chart(fig, use_container_width=True)
         
         # Yearly comparison
-        st.subheader("Year-over-Year Environmental Changes")
-        
-        # Prepare data
-        years = energy_pollution_with_suburb['YEAR'].unique()
-        suburbs = energy_pollution_with_suburb['SUBURB_NAME'].unique()
-        
-        # Let user select suburb for detailed view
-        # Make sure suburbs is not empty
-        if len(suburbs) > 0:
-            selected_suburb = st.selectbox("Select Suburb for Detailed Analysis", suburbs)
-            # Filter data for selected suburb
-            suburb_data = energy_pollution_with_suburb[energy_pollution_with_suburb['SUBURB_NAME'] == selected_suburb]
+        st.subheader("Environmental Correlation Across All Suburbs")
+
+        # Make sure data is not empty
+        if energy_pollution_with_suburb.empty:
+            st.error("No data available.")
         else:
-            st.error("No suburb data available.")
-            suburb_data = pd.DataFrame()
-        
-        # Create subplot with two y-axes
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        
-        # Only add traces if we have data
-        if not suburb_data.empty:
-            # Add energy consumption trace
-            fig.add_trace(
-                go.Bar(
-                    x=suburb_data['YEAR'],
-                    y=suburb_data['ENERGY_CONSUMPTION'],
-                    name="Energy Consumption",
-                    marker_color='#2196F3'
-                ),
-                secondary_y=False
+            # Drop rows with missing values to avoid errors
+            df = energy_pollution_with_suburb.dropna(subset=["ENERGY_CONSUMPTION", "NO2_LEVEL"])
+
+            # Pearson correlation for all data
+            if len(df) >= 2:
+                corr = np.corrcoef(df["ENERGY_CONSUMPTION"], df["NO2_LEVEL"])[0, 1]
+                st.metric(label="Pearson Correlation (Energy vs NO₂)", value=f"{corr:.2f}")
+
+                # Create scatter plot
+                
+
+                fig = px.line(
+                df,
+                x="YEAR",
+                y="NO2_LEVEL",
+                color="SUBURB_NAME",
+                markers=True,
+                title="NO₂ Levels Over Years by Suburb",
+                labels={
+                    "YEAR": "Year",
+                    "NO2_LEVEL": "NO₂ Level (μg/m³)",
+                    "SUBURB_NAME": "Suburb"
+                }
             )
-            
-            # Add NO2 level trace
-            fig.add_trace(
-                go.Scatter(
-                    x=suburb_data['YEAR'],
-                    y=suburb_data['NO2_LEVEL'],
-                    name="NO2 Level",
-                    marker_color='#FF5722',
-                    mode='lines+markers'
-                ),
-                secondary_y=True
+
+            fig.update_layout(
+                margin=dict(l=40, r=40, t=60, b=40),
+                height=600,
+                template="plotly_white"
             )
-        
-        # Set titles
-        fig.update_layout(
-            title=f"Energy Consumption and NO2 Levels in {selected_suburb} (2022-2023)",
-            height=500
-        )
-        
-        # Set y-axes titles
-        fig.update_yaxes(title_text="Energy Consumption (kWh)", secondary_y=False)
-        fig.update_yaxes(title_text="NO2 Level (μg/m³)", secondary_y=True)
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Change percentage analysis
-        change_data = energy_2023.sort_values(by="NO2_CHANGE_PCT")
-        
-        fig = px.bar(
-            change_data,
-            x="SUBURB_NAME",
-            y="NO2_CHANGE_PCT",
-            color="NO2_CHANGE_PCT",
-            color_continuous_scale=px.colors.diverging.RdYlGn_r,  # Red for increase, green for decrease
-            title="NO2 Pollution Change (%) from 2022 to 2023",
-            labels={"NO2_CHANGE_PCT": "NO2 Change (%)", "SUBURB_NAME": "Suburb"}
-        )
-        fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
+
+            st.plotly_chart(fig, use_container_width=True)
+
     
     with tab3:
         st.markdown('<p class="sub-header">Suburb Comparison</p>', unsafe_allow_html=True)
@@ -418,7 +384,7 @@ def main():
                     "NO2_CHANGE_PCT": "NO2 Change (%)",
                     "ENERGY_CONSUMPTION": "Energy Consumption"
                 },
-                text="SUBURB_NAME"
+                
             )
             
             # Add a horizontal line at y=0 to show the boundary between increase and decrease
