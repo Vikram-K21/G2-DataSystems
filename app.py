@@ -129,7 +129,7 @@ def main():
     # TAB 1: EV Adoption Overview
     
     with tab1:
-        st.markdown("<p style='text-align: center;padding-bottom:340px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">EV Adoption Metrics</p>', unsafe_allow_html=True)
         
         # Create metrics row
@@ -208,7 +208,7 @@ def main():
     # TAB 2: Environmental Impact Analysis
 
     with tab2:
-        st.markdown("<p style='text-align: center;padding-bottom:340px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">Environmental Impact Analysis</p>', unsafe_allow_html=True)
         
         # Filter for 2023 data for current analysis
@@ -310,7 +310,7 @@ def main():
     # TAB 3: Suburb Comparison
 
     with tab3:
-        st.markdown("<p style='text-align: center;padding-bottom:340px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">Suburb Comparison</p>', unsafe_allow_html=True)
         
         # Join EV impact and energy pollution for combined analysis
@@ -479,7 +479,7 @@ def main():
     # TAB 4: Data Explorer
     
     with tab4:
-        st.markdown("<p style='text-align: center;padding-bottom:340px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;padding-bottom:50px;padding-top:50px;'>ADD TEXT HERE.</p>", unsafe_allow_html=True)
         st.markdown('<p class="sub-header">Data Explorer</p>', unsafe_allow_html=True)
         
         # Display raw data tables
