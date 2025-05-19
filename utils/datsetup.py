@@ -1,127 +1,147 @@
-import os, pyodbc
+import os
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
 import io
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
 import pandas as pd
-import json
 
+# Load environment variables
 load_dotenv()
 
+# Azure Blob Storage credentials
+account_storage = os.environ.get('ACCOUNT_STORAGE', 'etluts04')
+connect_str = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
 
-# Replace these variables with your actual database credentials
-username = os.environ.get('USERNAME_AZURE')
-password = os.environ.get('PASSWORD')
-server = os.environ.get('SERVER')
-database = os.environ.get('DATABASE')
-account_storage = os.environ.get('ACCOUNT_STORAGE')
-connect_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+# Validate environment variables
+if not account_storage:
+    raise ValueError("ACCOUNT_STORAGE environment variable is missing.")
+print("Loaded ACCOUNT_STORAGE:", account_storage)
+print("Loaded AZURE_STORAGE_CONNECTION_STRING:", connect_str if connect_str else "None (will use DefaultAzureCredential)")
 
-# Using pyodbc
-engine = create_engine(f'mssql+pyodbc://{username}:{password}@{server}/{database}?driver=ODBC+Driver+18+for+SQL+Server')
-
-class AzureDB():
-    def __init__(self, local_path = "./data", account_storage = account_storage):
+class AzureDB:
+    def __init__(self, engine, local_path="./data", account_storage=account_storage):
+        self.engine = engine  # Store the SQLAlchemy engine
         self.local_path = local_path
         self.account_url = f"https://{account_storage}.blob.core.windows.net"
         self.default_credential = DefaultAzureCredential()
-        self.blob_service_client = BlobServiceClient.from_connection_string(connect_str)
-        # self.blob_service_client = BlobServiceClient(self.account_url, credential=self.default_credential)
+        try:
+            if connect_str and "AccountKey" in connect_str:
+                self.blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+                print("Initialized BlobServiceClient with connection string")
+            else:
+                self.blob_service_client = BlobServiceClient(account_url=self.account_url, credential=self.default_credential)
+                print("Initialized BlobServiceClient with DefaultAzureCredential")
+        except Exception as e:
+            print(f"Failed to initialize BlobServiceClient: {str(e)}")
+            raise
         
     def access_container(self, container_name): 
-        # Use this function to create/access a new container
+        self.container_name = container_name
         try:
-            # Creating container if not exist
-            self.container_client = self.blob_service_client.create_container(container_name)
-            print(f"Creating container {container_name} since not exist in database")
-            self.container_name = container_name
-    
-        except Exception as ex:
-            print(f"Acessing container {container_name}")
-            # Access the container
             self.container_client = self.blob_service_client.get_container_client(container=container_name)
-            self.container_name = container_name
+            self.container_client.create_container()
+            print(f"Created container {container_name}")
+        except Exception as ex:
+            print(f"Accessing existing container {container_name}: {ex}")
+            self.container_client = self.blob_service_client.get_container_client(container=container_name)
             
     def delete_container(self):
-        # Delete a container
         print("Deleting blob container...")
-        self.container_client.delete_container()
-        print("Done")
+        try:
+            self.container_client.delete_container()
+            print("Done")
+        except Exception as e:
+            print(f"Failed to delete container: {str(e)}")
+            raise
         
-    def upload_blob(self, blob_name, blob_data = None):
-        # Create a file in the local data directory to upload as blob to Azure
+    def upload_blob(self, blob_name, blob_data=None):
         local_file_name = blob_name
         upload_file_path = os.path.join(self.local_path, local_file_name)
         blob_client = self.blob_service_client.get_blob_client(container=self.container_name, blob=local_file_name)
-        print("\nUploading to Azure Storage as blob:\n\t" + local_file_name)
-
-        if blob_data is not None:
-            blob_client.create_blob_from_text(container_name=self.container_name, blob_name=blob_name, text=blob_data)
-        else:
-            # Upload the created file
-            with open(file=upload_file_path, mode="rb") as data:
-                blob_client.upload_blob(data)
+        print(f"Uploading to Azure Storage as blob: {local_file_name}")
+        try:
+            if blob_data is not None:
+                blob_client.upload_blob(blob_data, overwrite=True)
+            else:
+                with open(file=upload_file_path, mode="rb") as data:
+                    blob_client.upload_blob(data, overwrite=True)
+        except Exception as e:
+            print(f"Failed to upload blob {local_file_name}: {str(e)}")
+            raise
                 
     def list_blobs(self):
-        print("\nListing blobs...")
-        # List the blobs in the container
-        blob_list = self.container_client.list_blobs()
-        for blob in blob_list:
-            print("\t" + blob.name)  
+        print("Listing blobs...")
+        blob_list = []
+        try:
+            blobs = self.container_client.list_blobs()
+            for blob in blobs:
+                print(f"\t{blob.name}")
+                blob_list.append(blob.name)
+            return blob_list
+        except Exception as e:
+            print(f"Failed to list blobs: {str(e)}")
+            return blob_list
             
     def download_blob(self, blob_name):
-        # Download the blob to local storage
         download_file_path = os.path.join(self.local_path, blob_name)
-        print("\nDownloading blob to \n\t" + download_file_path)
-        with open(file=download_file_path, mode="wb") as download_file:
+        print(f"Downloading blob to {download_file_path}")
+        try:
+            with open(file=download_file_path, mode="wb") as download_file:
                 download_file.write(self.container_client.download_blob(blob_name).readall())
+        except Exception as e:
+            print(f"Failed to download blob {blob_name}: {str(e)}")
+            raise
                 
     def delete_blob(self, container_name: str, blob_name: str):
-        # Deleting a blob
-        print("\nDeleting blob " + blob_name)
-        blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-        blob_client.delete_blob()
+        print(f"Deleting blob {blob_name}")
+        try:
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            blob_client.delete_blob()
+        except Exception as e:
+            print(f"Failed to delete blob {blob_name}: {str(e)}")
+            raise
         
     def access_blob_csv(self, blob_name: str, **read_csv_kwargs) -> pd.DataFrame:
-        """
-        Download a CSV blob and return a DataFrame.
-        Any kwargs you pass here (delimiter, skiprows, dtype, etc.) are forwarded to pd.read_csv.
-        """
         print(f"Accessing blob {blob_name}")
-        content = self.container_client.download_blob(blob_name).readall().decode('utf-8')
-        return pd.read_csv(io.StringIO(content), **read_csv_kwargs)
+        try:
+            content = self.container_client.download_blob(blob_name).readall().decode('utf-8')
+            return pd.read_csv(io.StringIO(content), **read_csv_kwargs)
+        except Exception as e:
+            print(f"Failed to access blob {blob_name}: {str(e)}")
+            raise
     
-    def upload_dataframe_sqldatabase(self, blob_name, blob_data):
-        print("\nUploading to Azure SQL server as table:\n\t" + blob_name)
-        blob_data.to_sql(blob_name, engine, if_exists='replace', index=False)
-        primary = blob_name.replace('dim', 'id')
-        if 'fact' in blob_name.lower():
-            with engine.connect() as con:
-                trans = con.begin()
-                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] alter column {blob_name}_id bigint NOT NULL'))
-                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] ADD CONSTRAINT [PK_{blob_name}] PRIMARY KEY CLUSTERED ([{blob_name}_id] ASC);'))
-                trans.commit() 
-        else:        
-            with engine.connect() as con:
-                trans = con.begin()
-                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] alter column {primary} bigint NOT NULL'))
-                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] ADD CONSTRAINT [PK_{blob_name}] PRIMARY KEY CLUSTERED ([{primary}] ASC);'))
-                trans.commit() 
+    def upload_dataframe_sqldatabase(self, table_name, blob_data):
+        try:
+            blob_data.to_sql(table_name, self.engine, if_exists='replace', index=False)
+            print(f"Table '{table_name}' uploaded successfully.")
+        except Exception as e:
+            print(f"Failed to upload table '{table_name}': {str(e)}")
+            raise
                 
     def append_dataframe_sqldatabase(self, blob_name, blob_data):
-        print("\nAppending to table:\n\t" + blob_name)
-        blob_data.to_sql(blob_name, engine, if_exists='append', index=False)
+        print(f"Appending to table: {blob_name}")
+        try:
+            blob_data.to_sql(blob_name, self.engine, if_exists='append', index=False)
+        except Exception as e:
+            print(f"Failed to append table {blob_name}: {str(e)}")
+            raise
     
     def delete_sqldatabase(self, table_name):
-        with engine.connect() as con:
-            trans = con.begin()
-            con.execute(text(f"DROP TABLE [dbo].[{table_name}]"))
-            trans.commit()
+        try:
+            with self.engine.connect() as con:
+                trans = con.begin()
+                con.execute(text(f"DROP TABLE IF EXISTS [dbo].[{table_name}]"))
+                trans.commit()
+                print(f"Table '{table_name}' deleted successfully.")
+        except Exception as e:
+            print(f"Failed to delete table '{table_name}': {str(e)}")
+            raise
             
     def get_sql_table(self, query):        
-        # Create connection and fetch data using Pandas        
-        df = pd.read_sql_query(query, engine)
-        # Convert DataFrame to the specified JSON format
-        result = df.to_dict(orient='records')
-        return result
+        try:
+            df = pd.read_sql_query(query, self.engine)
+            result = df.to_dict(orient='records')
+            return result
+        except Exception as e:
+            print(f"Failed to execute query: {str(e)}")
+            raise
