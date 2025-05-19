@@ -3,7 +3,7 @@ from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from utils import AzureDB
+from utils.datasetup import AzureDB
 import pandas as pd
 
 # Load environment variables from .env file
@@ -36,7 +36,7 @@ if not account_storage:
 print(f"Loaded ACCOUNT_STORAGE: {account_storage}")
 print(f"Loaded AZURE_STORAGE_CONNECTION_STRING: {connect_str}")
 
-azureDB = AzureDB()
+azureDB = AzureDB(engine)
 try:
     azureDB.access_container("etlblob04")
     blobs = azureDB.list_blobs()
