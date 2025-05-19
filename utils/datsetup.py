@@ -4,6 +4,9 @@ from azure.storage.blob import BlobServiceClient
 import io
 from dotenv import load_dotenv
 import pandas as pd
+from sqlalchemy import create_engine, text
+import pyodbc
+print(pyodbc.drivers())
 
 # Load environment variables
 load_dotenv()
@@ -11,6 +14,11 @@ load_dotenv()
 # Azure Blob Storage credentials
 account_storage = os.environ.get('ACCOUNT_STORAGE', 'etluts04')
 connect_str = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
+server = os.environ.get('DB_SERVER', 'etluts04server.database.windows.net')
+database = os.environ.get('DB_DATABASE', 'etldb04')
+username = os.environ.get('DB_USERNAME', 'vikramdc')
+password = os.environ.get('DB_PASSWORD', 'Whyubuggin$19')
+container_name = os.environ.get('CONTAINER_NAME', 'etlblob04')
 
 # Validate environment variables
 if not account_storage:
@@ -18,6 +26,12 @@ if not account_storage:
 print("Loaded ACCOUNT_STORAGE:", account_storage)
 print("Loaded AZURE_STORAGE_CONNECTION_STRING:", connect_str if connect_str else "None (will use DefaultAzureCredential)")
 
+
+engine = create_engine(f'mssql+pyodbc://{username}:{password}@{server}/{database}?driver=ODBC+Driver+18+for+SQL+Server')
+
+
+
+ 
 class AzureDB:
     def __init__(self, engine, local_path="./data", account_storage=account_storage):
         self.engine = engine  # Store the SQLAlchemy engine
