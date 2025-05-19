@@ -45,31 +45,31 @@ def transform_ev_data(ev_df):
     ev_df.columns = [col.strip().rstrip(';') for col in ev_df.columns]
     
     # Extract only BEV (Battery Electric Vehicles) and PHEV (Plug-in Hybrid Electric Vehicles)
-    ev_df = ev_df[ev_df['FUEL_TYPE'].isin(['BEV', 'PHEV'])]
+    ev_df = ev_df[ev_df['FUEL TYPE'].isin(['BEV', 'PHEV'])]
     
     # Create a vehicle type category
-    ev_df['VEHICLE_CATEGORY'] = ev_df['VEHICLE_TYPE'].str.strip()
+    ev_df['VEHICLE_CATEGORY'] = ev_df['VEHICLE TYPE'].str.strip()
     
     # Extract year from model
     ev_df['MODEL_YEAR'] = ev_df['MODEL'].str.extract(r'(\d{4})').astype('float')
     
     # Clean price data
-    ev_df['PRICE'] = ev_df['LISTED_PRICE'].str.replace('*', '').str.strip()
+    ev_df['PRICE'] = ev_df['LISTED PRICE ($AUD)'].str.replace('*', '').str.strip()
     ev_df['PRICE'] = pd.to_numeric(ev_df['PRICE'], errors='coerce')
     
     # Process range data
-    ev_df['RANGE_KM'] = pd.to_numeric(ev_df['RANGE'], errors='coerce')
+    ev_df['RANGE_KM'] = pd.to_numeric(ev_df['RANGE (km)'], errors='coerce')
     # Clean suburb data
     ev_df['SUBURB'] = ev_df['SUBURB'].str.strip()
     
     # Group by suburb and count EVs
-    suburb_ev_counts = ev_df.groupby(['SUBURB', 'FUEL_TYPE']).size().reset_index(name='COUNT')
+    suburb_ev_counts = ev_df.groupby(['SUBURB', 'FUEL TYPE']).size().reset_index(name='COUNT')
     
     # Calculate summary metrics
     ev_summary = pd.DataFrame({
         'TOTAL_EVs': ev_df.groupby('SUBURB').size(),
-        'BEV_COUNT': ev_df[ev_df['FUEL_TYPE'] == 'BEV'].groupby('SUBURB').size(),
-        'PHEV_COUNT': ev_df[ev_df['FUEL_TYPE'] == 'PHEV'].groupby('SUBURB').size(),
+        'BEV_COUNT': ev_df[ev_df['FUEL TYPE'] == 'BEV'].groupby('SUBURB').size(),
+        'PHEV_COUNT': ev_df[ev_df['FUEL TYPE'] == 'PHEV'].groupby('SUBURB').size(),
         'AVG_RANGE_KM': ev_df.groupby('SUBURB')['RANGE_KM'].mean(),
         'AVG_PRICE': ev_df.groupby('SUBURB')['PRICE'].mean()
     }).reset_index()
@@ -221,8 +221,8 @@ def create_dimension_tables(final_df, ev_df):
     
     # Vehicle type dimension
     vehicle_type_dim = pd.DataFrame({
-        'VEHICLE_TYPE_KEY': range(1, len(ev_df['VEHICLE_TYPE'].unique()) + 1),
-        'VEHICLE_TYPE': sorted(ev_df['VEHICLE_TYPE'].unique())
+        'VEHICLE_TYPE_KEY': range(1, len(ev_df['VEHICLE TYPE'].unique()) + 1),
+        'VEHICLE_TYPE': sorted(ev_df['VEHICLE TYPE'].unique())
     })
     vehicle_type_dim.to_csv('extracted/vehicle_dim.csv')
     
