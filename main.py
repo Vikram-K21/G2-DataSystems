@@ -3,7 +3,7 @@ from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from datsetup import AzureDB
+from utils import AzureDB
 import pandas as pd
 
 # Load environment variables from .env file
