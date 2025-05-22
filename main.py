@@ -250,7 +250,7 @@ def create_dimension_tables(final_df, ev_df):
     
     # Time dimension
     time_dim = pd.DataFrame({
-        'TIME_KEY': [2022, 2023],
+        'time_id': [2022, 2023],
         'YEAR': [2022, 2023],
         'IS_CURRENT_YEAR': [False, True]
     })
@@ -258,7 +258,7 @@ def create_dimension_tables(final_df, ev_df):
     
     # Suburb dimension
     suburb_dim = pd.DataFrame({
-        'SUBURB_KEY': range(1, len(final_df) + 1),
+        'suburb_id': range(1, len(final_df) + 1),
         'SUBURB_NAME': final_df['SUBURB'],
     })
     suburb_dim.to_csv(r'C:\Users\HP\FinalVS\G2-DataSystems\extracted\suburb_dim.csv')
@@ -267,14 +267,14 @@ def create_dimension_tables(final_df, ev_df):
     ev_df.columns = [col.strip().upper().replace(" ", "_") for col in ev_df.columns]
     # Vehicle type dimension
     vehicle_dim = pd.DataFrame({
-        'VEHICLE_TYPE_KEY': range(1, len(ev_df['VEHICLE_TYPE'].unique()) + 1),
+        'vehicle_id': range(1, len(ev_df['VEHICLE_TYPE'].unique()) + 1),
         'VEHICLE_TYPE': sorted(ev_df['VEHICLE_TYPE'].unique())
     })
     vehicle_dim.to_csv(r'C:\Users\HP\FinalVS\G2-DataSystems\extracted\vehicle_dim.csv')
     
     # FUEL TYPE dimension
     fuel_dim = pd.DataFrame({
-        'FUEL TYPE_KEY': [1, 2],
+        'fuel_id': [1, 2],
         'FUEL TYPE': ['BEV', 'PHEV'],
         'FUEL DESCRIPTION': ['Battery Electric Vehicle', 'Plug-in Hybrid Electric Vehicle']
     })
@@ -297,7 +297,7 @@ def create_fact_tables(final_df, suburb_dim):
     
     # EV impact fact table
     ev_fact = pd.DataFrame({
-        'SUBURB_KEY': final_df_with_keys['SUBURB_KEY'],
+        'ev_fact_id': final_df_with_keys['suburb_id'],
         'YEAR': 2023,
         'TOTAL_EVS': final_df_with_keys['TOTAL_EVs'],
         'BEV_COUNT': final_df_with_keys['BEV_COUNT'],
@@ -309,7 +309,7 @@ def create_fact_tables(final_df, suburb_dim):
     
     # Energy vs Pollution fact table
     energy_fact = pd.DataFrame({
-        'SUBURB_KEY': final_df_with_keys['SUBURB_KEY'],
+        'energy_fact_id': final_df_with_keys['suburb_id'],
         'YEAR': 2023,
         'ENERGY_CONSUMPTION': final_df_with_keys['CONSUMPTION_2023'],
         'ENERGY_CHANGE_PCT': final_df_with_keys['CONSUMPTION_CHANGE_PCT'],
@@ -320,23 +320,23 @@ def create_fact_tables(final_df, suburb_dim):
         'NO2_PER_EV': final_df_with_keys['NO2_PER_EV']
         
     })
-    energy_fact = energy_fact.fillna(0.0)
-    # Create historical rows for 2022
-    energy_fact_2022 = pd.DataFrame({
-        'SUBURB_KEY': final_df_with_keys['SUBURB_KEY'],
-        'YEAR': 2022,
-        'ENERGY_CONSUMPTION': final_df_with_keys['CONSUMPTION_2022'],
-        'ENERGY_CHANGE_PCT': 0,  # No previous year for comparison
-        'NO2_LEVEL': final_df_with_keys['NO2_2022'],
-        'NO2_CHANGE': 0,  # No previous year for comparison
-        'NO2_CHANGE_PCT': 0,  # No previous year for comparison
-        'EV_PER_ENERGY_UNIT': final_df_with_keys['TOTAL_EVs'] / (final_df_with_keys['CONSUMPTION_2022'] / 1000000),
-        'NO2_PER_EV': final_df_with_keys['NO2_2022'] / final_df_with_keys['TOTAL_EVs'].replace(0, 1)
-    })
+    # energy_fact = energy_fact.fillna(0.0)
+    # # Create historical rows for 2022
+    # energy_fact_2022 = pd.DataFrame({
+    #     'energy_fact_2022_id': final_df_with_keys['suburb_id'],
+    #     'YEAR': 2022,
+    #     'ENERGY_CONSUMPTION': final_df_with_keys['CONSUMPTION_2022'],
+    #     'ENERGY_CHANGE_PCT': 0,  # No previous year for comparison
+    #     'NO2_LEVEL': final_df_with_keys['NO2_2022'],
+    #     'NO2_CHANGE': 0,  # No previous year for comparison
+    #     'NO2_CHANGE_PCT': 0,  # No previous year for comparison
+    #     'EV_PER_ENERGY_UNIT': final_df_with_keys['TOTAL_EVs'] / (final_df_with_keys['CONSUMPTION_2022'] / 1000000),
+    #     'NO2_PER_EV': final_df_with_keys['NO2_2022'] / final_df_with_keys['TOTAL_EVs'].replace(0, 1)
+    # })
     
-    # Combine 2022 and 2023 data
-    energy_fact = pd.concat([energy_fact, energy_fact_2022])
-    energy_fact = pd.concat([energy_fact, energy_fact_2022])
+    # # Combine 2022 and 2023 data
+    # energy_fact = pd.concat([energy_fact, energy_fact_2022])
+    # energy_fact = pd.concat([energy_fact, energy_fact_2022])
 
     # Clean up float columns for SQL Server compatibility
     float_cols = energy_fact.select_dtypes(include=['float', 'float64']).columns
