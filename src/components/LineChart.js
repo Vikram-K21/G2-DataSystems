@@ -1,70 +1,94 @@
-"use client";
-
+import React from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+// Register ChartJS components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-export default function LineChartComponent({ data, xKey, yKey, title, colorBy }) {
-  // Get unique values for the x-axis
-  const xValues = [...new Set(data.map(item => item[xKey]))].sort();
+const LineChartComponent = ({ data, xKey, yKey, title, colorBy }) => {
+  // Handle different data formats
+  let chartData = [];
   
-  // Get unique values for the color grouping
-  const colorGroups = [...new Set(data.map(item => item[colorBy]))];
+  if (!data) {
+    return <div className="p-4 text-red-500">No data available for line chart</div>;
+  }
   
-  // Generate colors for each group
+  // Check if data is in the format returned by backend
+  if (data.data && Array.isArray(data.data)) {
+    chartData = data.data;
+    // Use the keys provided by the backend if available
+    if (data.x_key) xKey = data.x_key;
+    if (data.y_key) yKey = data.y_key;
+    if (data.color_by) colorBy = data.color_by;
+  } else if (Array.isArray(data)) {
+    chartData = data;
+  } else {
+    return <div className="p-4 text-red-500">Invalid data format for line chart</div>;
+  }
+  
+  if (chartData.length === 0) {
+    return <div className="p-4 text-red-500">No data available for line chart</div>;
+  }
+
+  // Get unique values for the colorBy field to create separate lines
+  const uniqueCategories = colorBy 
+    ? [...new Set(chartData.map(item => item[colorBy]))]
+    : ['Default'];
+
+  // Generate colors for each category
   const colors = [
-    'rgba(52, 211, 153, 1)',
-    'rgba(96, 165, 250, 1)',
-    'rgba(251, 146, 60, 1)',
-    'rgba(167, 139, 250, 1)',
-    'rgba(248, 113, 113, 1)',
-    'rgba(45, 212, 191, 1)',
-    'rgba(251, 191, 36, 1)',
-    'rgba(232, 121, 249, 1)',
+    'rgba(54, 162, 235, 1)',
+    'rgba(255, 99, 132, 1)',
+    'rgba(75, 192, 192, 1)',
+    'rgba(255, 159, 64, 1)',
+    'rgba(153, 102, 255, 1)',
+    'rgba(255, 206, 86, 1)',
+    'rgba(231, 233, 237, 1)',
   ];
-  
-  // Create datasets for each color group
-  const datasets = colorGroups.map((group, index) => {
-    const groupData = data.filter(item => item[colorBy] === group);
+
+  // Prepare datasets
+  const datasets = uniqueCategories.map((category, index) => {
+    const categoryData = colorBy 
+      ? chartData.filter(item => item[colorBy] === category)
+      : chartData;
     
-    // Create a map of x values to y values for this group
-    const dataMap = {};
-    groupData.forEach(item => {
-      dataMap[item[xKey]] = item[yKey];
+    // Sort data by xKey if it's a number or date
+    categoryData.sort((a, b) => {
+      if (typeof a[xKey] === 'number') {
+        return a[xKey] - b[xKey];
+      }
+      return String(a[xKey]).localeCompare(String(b[xKey]));
     });
     
-    // Create the dataset with values for each x value
     return {
-      label: group,
-      data: xValues.map(x => dataMap[x] || null),
+      label: category,
+      data: categoryData.map(item => item[yKey]),
       borderColor: colors[index % colors.length],
-      backgroundColor: colors[index % colors.length].replace('1)', '0.1)'),
-      borderWidth: 2,
-      tension: 0.3,
+      backgroundColor: colors[index % colors.length].replace('1)', '0.2)'),
+      tension: 0.1,
+      pointRadius: 4,
+      pointHoverRadius: 6,
     };
   });
-  
-  const chartData = {
-    labels: xValues,
+
+  // Get labels (x-axis values)
+  let labels;
+  if (colorBy) {
+    // Get unique x values across all categories
+    const allXValues = [...new Set(chartData.map(item => item[xKey]))];
+    allXValues.sort((a, b) => {
+      if (typeof a === 'number') {
+        return a - b;
+      }
+      return String(a).localeCompare(String(b));
+    });
+    labels = allXValues;
+  } else {
+    labels = chartData.map(item => item[xKey]);
+  }
+
+  const chartDataConfig = {
+    labels,
     datasets,
   };
 
@@ -84,16 +108,17 @@ export default function LineChartComponent({ data, xKey, yKey, title, colorBy })
       },
     },
     scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: yKey.replace(/_/g, ' ').toUpperCase(),
+        },
+      },
       x: {
         title: {
           display: true,
-          text: xKey.replace(/_/g, ' '),
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: yKey.replace(/_/g, ' '),
+          text: xKey.replace(/_/g, ' ').toUpperCase(),
         },
       },
     },
@@ -101,9 +126,12 @@ export default function LineChartComponent({ data, xKey, yKey, title, colorBy })
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
-      <div style={{ height: '400px' }}>
-        <Line data={chartData} options={options} />
+      <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">{title}</h3>
+      <div className="h-80">
+        <Line data={chartDataConfig} options={options} />
       </div>
     </div>
   );
-}
+};
+
+export default LineChartComponent;
