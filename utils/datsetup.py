@@ -107,13 +107,22 @@ class AzureDB:
         return pd.read_csv(io.StringIO(content), **read_csv_kwargs)
 
     
-    def upload_dataframe_sqldatabase(self, table_name, blob_data):
-        try:
-            blob_data.to_sql(table_name, self.engine, if_exists='replace', index=False)
-            print(f"Table '{table_name}' uploaded successfully.")
-        except Exception as e:
-            print(f"Failed to upload table '{table_name}': {str(e)}")
-            raise
+    def upload_dataframe_sqldatabase(self, blob_name, blob_data):
+        print("\nUploading to Azure SQL server as table:\n\t" + blob_name)
+        blob_data.to_sql(blob_name, engine, if_exists='replace', index=False)
+        primary = blob_name.replace('dim', 'id')
+        if '_fact' in blob_name.lower():
+            with engine.connect() as con:
+                trans = con.begin()
+                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] alter column {blob_name}_id bigint NOT NULL'))
+                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] ADD CONSTRAINT [PK_{blob_name}] PRIMARY KEY CLUSTERED ([{blob_name}_id] ASC);'))
+                trans.commit() 
+        else:        
+            with engine.connect() as con:
+                trans = con.begin()
+                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] alter column {primary} bigint NOT NULL'))
+                con.execute(text(f'ALTER TABLE [dbo].[{blob_name}] ADD CONSTRAINT [PK_{blob_name}] PRIMARY KEY CLUSTERED ([{primary}] ASC);'))
+                trans.commit() 
                 
     def append_dataframe_sqldatabase(self, blob_name, blob_data):
         print(f"Appending to table: {blob_name}")
