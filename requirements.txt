@@ -19,3 +19,4 @@ passlib[argon2-cffi]
 argon2-cffi
 python-multipart
 jupyter
+flask
