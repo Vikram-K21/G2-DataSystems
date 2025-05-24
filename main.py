@@ -251,7 +251,8 @@ def create_fact_tables(final_df, suburb_dim, vehicle_dim, fuel_dim, time_dim):
 
 def load_to_azure(azureDB,ev_fact, energy_fact,suburb_dim, vehicle_dim, fuel_dim,time_dim):
     print("\n=== LOADING DATA TO AZURE ===")
-    # 1. Drop fact tables first (removes FKs)
+    
+    # Clear existing tables in the database
     with engine.connect() as con:
         for fact_table in ['ev_fact', 'energy_fact']:
             try:
@@ -263,17 +264,15 @@ def load_to_azure(azureDB,ev_fact, energy_fact,suburb_dim, vehicle_dim, fuel_dim
     vehicle_dim = vehicle_dim.drop_duplicates(subset=['vehicle_id'])
     fuel_dim = fuel_dim.drop_duplicates(subset=['fuel_id'])
     time_dim = time_dim.drop_duplicates(subset=['time_id'])
-    # 2. Now reload/replace dimension tables (no FKs exist now)
+
     azureDB.upload_dataframe_sqldatabase("suburb_dim", suburb_dim)
     azureDB.upload_dataframe_sqldatabase("vehicle_dim", vehicle_dim)
     azureDB.upload_dataframe_sqldatabase("fuel_dim", fuel_dim)
     azureDB.upload_dataframe_sqldatabase("time_dim", time_dim)
-
-    # 3. Reload fact tables
     azureDB.upload_dataframe_sqldatabase("ev_fact", ev_fact)
     azureDB.upload_dataframe_sqldatabase("energy_fact", energy_fact)
 
-    # 4. Re-add foreign key constraints
+    # Add foreign key constraints
     with engine.connect() as con:
         fact_tables = ['ev_fact', 'energy_fact']
         dimension_tables = [
