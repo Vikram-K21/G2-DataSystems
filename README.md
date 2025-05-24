@@ -2,7 +2,7 @@
 
 ## Get started by:
 
-Firstly, create a .env file of your own in the root directory - for format, refer below to 'About .env'.
+Firstly, you MUST create a .env file of your own in the root directory - for format, refer below to 'About .env'.
 
 Secondly, run main.py to load your data into your Azure SQL Database
 ```bash
