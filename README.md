@@ -31,14 +31,9 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. 
 
 If you wish to see how the backend works, open http://localhost:5000/api, and use one of the following debug endpoints:
-There is only 5 table names;
+To list the tables available, use;
 ```bash
-dbo.energy_fact
-dbo.ev_fact
-dbo.fuel_dim
-dbo.suburb_dim
-dbo.time_dim
-dbo.vehicle_dim
+http://localhost:5000/api/list-tables
 ```
 
 ```bash
