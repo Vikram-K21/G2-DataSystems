@@ -94,7 +94,7 @@ export const fetchEVPriceScatter = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/ev-price-scatter`);
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
@@ -111,7 +111,7 @@ export const fetchEVRangeScatter = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/ev-range-scatter`);
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
@@ -128,7 +128,7 @@ export const fetchEnergyVsNO2 = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/energy-vs-no2`);
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
@@ -141,15 +141,50 @@ export const fetchEnergyVsNO2 = async () => {
  * Fetch NO2 pollution trends over time
  * @returns {Promise<Object>} - Object containing data for trend chart
  */
-export const fetchNO2Trends = async () => {
+export const fetchNO2Trends = async (years = [2022, 2023]) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/no2-trends`);
+    const queryParams = new URLSearchParams();
+    years.forEach(year => queryParams.append('years', year));
+    
+    const response = await fetch(`${API_BASE_URL}/no2-trends?${queryParams.toString()}`);
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
     console.error('Error fetching NO2 trends data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch EV efficiency vs NO2 reduction analysis
+ */
+export const fetchEVEfficiencyAnalysis = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ev-efficiency-analysis`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching EV efficiency analysis:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch energy environmental impact data
+ */
+export const fetchEnergyEnvironmentalImpact = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/energy-environmental-impact`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching energy environmental impact:', error);
     throw error;
   }
 };

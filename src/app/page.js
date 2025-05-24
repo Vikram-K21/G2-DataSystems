@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   fetchTableData, 
   fetchEnergyData, 
-  fetchEVMetrics,
+  //fetchEVMetrics,
   fetchEVDistribution,
   fetchEVPriceScatter,
   fetchEVRangeScatter,
-  fetchEnergyVsNO2,
-  fetchNO2Trends
+  fetchEVEfficiencyAnalysis,
+  fetchEnergyEnvironmentalImpact
 } from '../services/dataService';
 import MetricCard from "../components/MetricCard";
 import EVDistributionChart from "../components/EVDistributionChart";
@@ -22,12 +22,12 @@ export default function Home() {
   // State to store the data
   const [tableData, setTableData] = useState([]);
   const [energyData, setEnergyData] = useState([]);
-  const [evMetrics, setEVMetrics] = useState(null);
+  //const [evMetrics, setEVMetrics] = useState(null);
   const [evDistribution, setEVDistribution] = useState(null);
   const [evPriceScatter, setEVPriceScatter] = useState(null);
   const [evRangeScatter, setEVRangeScatter] = useState(null);
-  const [energyVsNO2, setEnergyVsNO2] = useState(null);
-  const [no2Trends, setNO2Trends] = useState(null);
+  const [evEfficiencyAnalysis, setEVEfficiencyAnalysis] = useState(null);
+  const [energyEnvironmentalImpact, setEnergyEnvironmentalImpact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -37,14 +37,14 @@ export default function Home() {
       setLoading(true);
       try {
         // Load data from backend
-        const tableResult = await fetchTableData('energy_pollution_fact', 5);
+        const tableResult = await fetchTableData('energy_fact', 5);
         setTableData(tableResult);
         
         const energyResult = await fetchEnergyData();
         setEnergyData(energyResult);
         
-        const metricsResult = await fetchEVMetrics();
-        setEVMetrics(metricsResult);
+        //const metricsResult = await fetchEVMetrics();
+        //setEVMetrics(metricsResult);
         
         // Chart data
         const evDistributionData = await fetchEVDistribution();
@@ -56,11 +56,12 @@ export default function Home() {
         const evRangeData = await fetchEVRangeScatter();
         setEVRangeScatter(evRangeData);
         
-        const energyNO2Data = await fetchEnergyVsNO2();
-        setEnergyVsNO2(energyNO2Data);
+        // New environmental analysis data
+        const evEfficiencyData = await fetchEVEfficiencyAnalysis();
+        setEVEfficiencyAnalysis(evEfficiencyData);
         
-        const no2TrendsData = await fetchNO2Trends();
-        setNO2Trends(no2TrendsData);
+        const energyEnvironmentalData = await fetchEnergyEnvironmentalImpact();
+        setEnergyEnvironmentalImpact(energyEnvironmentalData);
         
         setError(null);
       } catch (err) {
@@ -74,9 +75,6 @@ export default function Home() {
     loadData();
   }, []);
 
-  // Filter for 2023 data if available
-  const energy2023 = energyData.filter(item => item.year === 2023 || item.YEAR === 2023);
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {/* Header */}
@@ -89,7 +87,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <div className="text-center py-24 mb-12">
+        <div className="text-center py-100 mb-12">
           <h1 className="text-4xl font-bold mb-4">
             In Sydney, ever since the introduction of electric vehicles (EVs), have they made any impact on reducing the amount of pollution yearly?
           </h1>
@@ -146,31 +144,21 @@ export default function Home() {
                 >
                   Environmental Impact
                 </button>
-                <button
-                  onClick={() => setActiveTab("suburbAnalysis")}
-                  className={`${
-                    activeTab === "suburbAnalysis"
-                      ? "border-green-500 text-green-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                >
-                  Suburb Analysis
-                </button>
               </nav>
             </div>
             
             {/* EV Adoption Tab */}
-            {activeTab === "evAdoption" && evMetrics && (
+            {activeTab === "evAdoption" && (
               <div>
                 <h2 className="text-2xl font-bold mb-6 text-green-600 dark:text-green-400">
                   EV Adoption Metrics
                 </h2>
                 {/* Metrics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <MetricCard title="Total EVs" value={evMetrics.total_evs.toLocaleString()} />
+                  {/* <MetricCard title="Total EVs" value={evMetrics.total_evs.toLocaleString()} />
                   <MetricCard title="Battery EVs (BEV)" value={evMetrics.bev.toLocaleString()} />
                   <MetricCard title="Plug-in Hybrid EVs (PHEV)" value={evMetrics.phev.toLocaleString()} />
-                  <MetricCard title="BEV Percentage" value={`${evMetrics.bev_percentage.toFixed(1)}%`} />
+                  <MetricCard title="BEV Percentage" value={`${evMetrics.bev_percentage.toFixed(1)}%`} /> */}
                 </div>
                 
                 {/* EV Distribution Chart */}
@@ -211,81 +199,137 @@ export default function Home() {
                   Environmental Impact Analysis
                 </h2>
                 
-                {/* Energy vs Pollution Scatter Plot */}
-                {energyVsNO2 && (
-                  <ScatterPlotChart
-                    data={energyVsNO2}  // Pass the whole object, not just energyVsNO2.data
-                    xKey="ENERGY_CONSUMPTION"
-                    yKey="NO2_LEVEL"
-                    title="Energy Consumption vs NO2 Pollution (2023)"
-                    excludePoints={['sydney']}
-                  />
-                )}
-                
-                {/* NO2 Levels Over Time */}
-                {no2Trends && (
-                  <LineChartComponent
-                    data={no2Trends}  // Pass the whole object, not just no2Trends.data
-                    xKey="YEAR"
-                    yKey="NO2_LEVEL"
-                    title="NO2 Levels Over Years by Suburb"
-                    colorBy="SUBURB_NAME"
-                  />
-                )}
-              </div>
-            )}
-            
-            {/* Suburb Analysis Tab */}
-            {activeTab === "suburbAnalysis" && (
-              <div>
-                <h2 className="text-2xl font-bold mb-6 text-green-600 dark:text-green-400">
-                  Suburb Comparison
-                </h2>
-                
-                {/* EV Adoption by Suburb */}
-                {evDistribution && (
-                  <EVDistributionChart evData={evDistribution} />
-                )}
-                
-                {/* EV Adoption vs NO2 Reduction */}
-                <h2 className="text-2xl font-bold mb-6 text-green-600 dark:text-green-400">
-                  EV Adoption vs NO2 Reduction
-                </h2>
-                
-                {energyVsNO2 && (
-                  <ScatterPlotChart
-                    data={energyVsNO2.data || []}
-                    xKey="TOTAL_EVS"
-                    yKey="NO2_CHANGE_PCT"
-                    title="Relationship between EV Adoption and NO2 Change"
-                  />
-                )}
-                
-                {/* Data Table */}
-                {tableData.length > 0 && (
-                  <div className="mt-12">
-                    <h2 className="text-2xl font-bold mb-6 text-green-600 dark:text-green-400">
-                      Raw Data Sample
-                    </h2>
-                    <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg">
+                {/* EV Efficiency vs NO2 Reduction Analysis */}
+                {evEfficiencyAnalysis && (
+                  <div className="mb-8">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                      EV Efficiency vs NO2 Reduction by Suburb and Year
+                    </h3>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-700">
                           <tr>
-                            {Object.keys(tableData[0]).map(key => (
-                              <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                {key}
-                              </th>
-                            ))}
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Suburb
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Year
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              EV Efficiency
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              NO2 Reduction %
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Energy Change %
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              NO2 per EV
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                          {tableData.map((row, index) => (
+                          {evEfficiencyAnalysis.slice(0, 10).map((row, index) => (
                             <tr key={index} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : ''}>
-                              {Object.values(row).map((value, i) => (
-                                <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {value !== null ? value.toString() : 'null'}
-                                </td>
-                              ))}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                {row.SUBURB_NAME}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {row.YEAR}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {row.EV_EFFICIENCY}
+                              </td>
+                              <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                row.NO2_REDUCTION_PCT < 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {row.NO2_REDUCTION_PCT}%
+                              </td>
+                              <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                row.ENERGY_CHANGE_PCT < 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {row.ENERGY_CHANGE_PCT}%
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {row.NO2_PER_EV}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Energy Environmental Impact Dashboard */}
+                {energyEnvironmentalImpact && (
+                  <div className="mb-8">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                      Energy vs Environmental Performance by Suburb
+                    </h3>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Suburb
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Avg Energy Consumption
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Energy Change %
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Avg NO2 Level
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              NO2 Change %
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              EV Efficiency
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              Performance
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                          {energyEnvironmentalImpact.slice(0, 10).map((row, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : ''}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                {row.SUBURB_NAME}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {row.AVG_ENERGY_CONSUMPTION?.toLocaleString()}
+                              </td>
+                              <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                row.ENERGY_CHANGE_PCT < 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {row.ENERGY_CHANGE_PCT}%
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {row.AVG_NO2_LEVEL}
+                              </td>
+                              <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                row.NO2_CHANGE_PCT < 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {row.NO2_CHANGE_PCT}%
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {row.EV_EFFICIENCY}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  row.ENVIRONMENTAL_PERFORMANCE === 'Excellent' ? 'bg-green-100 text-green-800' :
+                                  row.ENVIRONMENTAL_PERFORMANCE === 'Good' ? 'bg-blue-100 text-blue-800' :
+                                  row.ENVIRONMENTAL_PERFORMANCE === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {row.ENVIRONMENTAL_PERFORMANCE}
+                                </span>
+                              </td>
                             </tr>
                           ))}
                         </tbody>

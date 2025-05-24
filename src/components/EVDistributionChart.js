@@ -31,15 +31,15 @@ const EVDistributionChart = ({ evData }) => {
       {
         label: 'Battery Electric Vehicles (BEV)',
         data: evData.bev_data,
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+        borderColor: 'rgba(34, 197, 94, 1)',
         borderWidth: 1,
       },
       {
         label: 'Plug-in Hybrid Electric Vehicles (PHEV)',
         data: evData.phev_data,
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,
       },
     ],
@@ -54,32 +54,53 @@ const EVDistributionChart = ({ evData }) => {
       },
       title: {
         display: true,
-        text: 'EV Distribution by Suburb',
+        text: 'Top 10 Suburbs by EV Count (Stacked)',
         font: {
           size: 16,
         },
       },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          footer: function(tooltipItems) {
+            let total = 0;
+            tooltipItems.forEach(function(tooltipItem) {
+              total += tooltipItem.parsed.y;
+            });
+            return 'Total: ' + total + ' EVs';
+          }
+        }
+      },
     },
     scales: {
+      x: {
+        stacked: true,
+        title: {
+          display: true,
+          text: 'Suburb',
+        },
+      },
       y: {
+        stacked: true,
         beginAtZero: true,
         title: {
           display: true,
           text: 'Number of Vehicles',
         },
       },
-      x: {
-        title: {
-          display: true,
-          text: 'Suburb',
-        },
-      },
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false,
     },
   };
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">EV Distribution by Suburb</h3>
+      <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+        EV Distribution by Suburb (Top 10)
+      </h3>
       <div className="h-80">
         <Bar data={data} options={options} />
       </div>
