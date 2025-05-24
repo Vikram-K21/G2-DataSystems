@@ -670,6 +670,8 @@ def energy_environmental_impact():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    ## BELOW IS EVERYTHING RELATED TO DEBUGGING THE TABLES, IF THINGS ARENT SHOWING CORRECTLY, USE THESE PATHS HELP DEBUG.
 
 # Secure table access with whitelist
 @app.route("/api/tables/<table_name>")
