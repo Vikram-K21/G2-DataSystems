@@ -295,8 +295,8 @@ def load_to_azure(azureDB,ev_fact, energy_fact,suburb_dim, vehicle_dim, fuel_dim
                     print(f"Added FK constraint FK_{fact_table}_{id_column}_dim")
                 except Exception as e:
                     print(f"Could not add FK constraint FK_{fact_table}_{id_column}_dim: {e}")
-    print("All tables loaded to Azure SQL Database with naming conventions applied.")
-    print("All tables loaded to Azure SQL Database with naming conventions applied.")
+    print("All tables loaded to Azure SQL Database GOOD STUFF!")
+    
 
 def main():
     # Initialize the blob container client before extracting data
